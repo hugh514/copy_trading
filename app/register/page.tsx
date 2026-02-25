@@ -1,6 +1,9 @@
-import { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Activity, ArrowRight, UserPlus } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +17,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const metadata: Metadata = {
-  title: "Criar Conta | CopyTrade MVP",
-  description: "Crie sua conta no CopyTrade MVP.",
-};
-
 export default function RegisterPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      // Set a mock session cookie (expires in 1 day)
+      document.cookie = "copytrade_session=true; path=/; max-age=86400";
+      router.push("/");
+      router.refresh();
+    }, 1000);
+  };
+
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Decorative Elements */}
@@ -51,74 +65,75 @@ export default function RegisterPage() {
               Preencha os dados abaixo para criar sua conta
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-neutral-700">
-                Nome Completo
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="João Silva"
-                className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-neutral-700">
-                E-mail
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@exemplo.com"
-                className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-neutral-700">
-                Senha
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password" className="text-neutral-700">
-                Confirmar Senha
-              </Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                required
-                className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              asChild
-              className="w-full h-11 text-base font-medium shadow-md transition-transform active:scale-[0.98]"
-            >
-              <Link href="/">
-                Criar conta
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <div className="text-center text-sm text-neutral-500">
-              Já tem uma conta?{" "}
-              <Link
-                href="/login"
-                className="font-semibold text-primary hover:text-primary/80 transition-colors"
+          <form onSubmit={handleRegister}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-neutral-700">
+                  Nome Completo
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="João Silva"
+                  className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-neutral-700">
+                  E-mail
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@exemplo.com"
+                  className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-neutral-700">
+                  Senha
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password" className="text-neutral-700">
+                  Confirmar Senha
+                </Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  required
+                  className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-11 text-base font-medium shadow-md transition-transform active:scale-[0.98]"
               >
-                Entrar
-              </Link>
-            </div>
-          </CardFooter>
+                {isLoading ? "Criando..." : "Criar conta"}
+                {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+              </Button>
+              <div className="text-center text-sm text-neutral-500">
+                Já tem uma conta?{" "}
+                <Link
+                  href="/login"
+                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                >
+                  Entrar
+                </Link>
+              </div>
+            </CardFooter>
+          </form>
         </Card>
       </div>
     </div>

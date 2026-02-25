@@ -1,4 +1,6 @@
+'use client'
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Bell,
   Search,
@@ -11,6 +13,12 @@ import {
   Info,
   Clock,
   Check,
+  Menu,
+  Activity,
+  LayoutDashboard,
+  ShieldAlert,
+  Download,
+  Key,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,6 +35,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function Header() {
   const notifications = [
@@ -64,19 +73,75 @@ export function Header() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  const router = useRouter();
+
+  const handleLogout = () => {
+    document.cookie = "copytrade_session=; path=/; max-age=0";
+    router.push("/login");
+  };
+
   return (
-    <header className="h-16 border-b bg-white/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10 w-full shadow-sm">
-      <div className="flex items-center gap-4 text-neutral-500">
-        <div className="relative">
+    <header className="h-16 border-b bg-white/80 backdrop-blur-md flex items-center justify-between px-4 md:px-6 sticky top-0 z-10 w-full shadow-sm">
+      <div className="flex items-center gap-2 md:gap-4 text-neutral-500 w-full md:w-auto">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0">
+            <div className="p-6 flex items-center gap-3 border-b border-neutral-100">
+              <div className="bg-primary text-primary-foreground p-2 rounded-lg shadow-md">
+                <Activity className="h-5 w-5" />
+              </div>
+              <h2 className="text-xl font-bold tracking-tight text-neutral-900">
+                CopyTrade
+              </h2>
+            </div>
+            <nav className="p-4 space-y-2">
+              <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-4 px-3">
+                Menu Principal
+              </div>
+              <Link
+                href="/"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-neutral-600 font-medium transition-all hover:text-primary hover:bg-neutral-50"
+              >
+                <LayoutDashboard className="h-5 w-5" /> Dashboard
+              </Link>
+              <Link
+                href="/risk-management"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-neutral-600 font-medium transition-all hover:text-primary hover:bg-neutral-50"
+              >
+                <ShieldAlert className="h-5 w-5" /> Gestão de Risco
+              </Link>
+              <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-4 mt-6 px-3">
+                Integração
+              </div>
+              <Link
+                href="/download"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-neutral-600 font-medium transition-all hover:text-primary hover:bg-neutral-50"
+              >
+                <Download className="h-5 w-5" /> Baixar Robô
+              </Link>
+              <Link
+                href="/access-key"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-neutral-600 font-medium transition-all hover:text-primary hover:bg-neutral-50"
+              >
+                <Key className="h-5 w-5" /> Chave de Acesso
+              </Link>
+            </nav>
+          </SheetContent>
+        </Sheet>
+        <div className="relative flex-1 md:flex-initial">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-400" />
           <input
             type="search"
             placeholder="Buscar ativo..."
-            className="pl-9 pr-4 py-2 bg-neutral-100 border-transparent rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white w-64 transition-all"
+            className="pl-9 pr-4 py-2 bg-neutral-100 border-transparent rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white w-full md:w-64 transition-all"
           />
         </div>
       </div>
-      <div className="flex items-center gap-4 relative">
+      <div className="flex items-center gap-2 md:gap-4 relative">
         <Popover>
           <PopoverTrigger asChild>
             <button className="relative p-2 text-neutral-500 hover:text-neutral-900 transition-colors rounded-full hover:bg-neutral-100 focus:outline-none">
@@ -166,12 +231,13 @@ export function Header() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <Link href="/login">
-              <DropdownMenuItem className="cursor-pointer gap-2 text-red-600 focus:text-red-600 focus:bg-red-50">
-                <LogOut className="h-4 w-4" />
-                <span>Sair da conta</span>
-              </DropdownMenuItem>
-            </Link>
+            <DropdownMenuItem
+              className="cursor-pointer gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sair da conta</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
