@@ -9,7 +9,7 @@ import { ArrowRight, Loader2 } from "lucide-react";
 
 import { loginSchema, LoginInput } from "@/lib/validations/auth";
 import { loginAction } from "@/lib/actions/auth";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

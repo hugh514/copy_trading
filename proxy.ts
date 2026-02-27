@@ -2,37 +2,44 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
-  // Get the session cookie
-  const session = request.cookies.get("copytrade_session");
+    const token = request.cookies.get("token")?.value;
+    const { pathname } = request.nextUrl;
 
-  // Public routes that don't require authentication
-  const isPublicRoute =
-    request.nextUrl.pathname === "/login" ||
-    request.nextUrl.pathname === "/register" ||
-    request.nextUrl.pathname === "/forgot-password";
+    const isPublicRoute = pathname === "/login" || pathname === "/register";
+    const isAdminRoute = pathname.startsWith("/admin");
+    const isProtectedRoute = pathname.startsWith("/dashboard");
 
-  // If user is not authenticated and trying to access a protected route
-  if (!session && !isPublicRoute) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
+    // Redireciona usuários logados para o dashboard se tentarem acessar rotas públicas
+    if (isPublicRoute && token) {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
 
-  // If user is authenticated and trying to access login/register
-  if (session && isPublicRoute) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
+    // Bloqueia acesso a rotas protegidas se não houver token
+    if ((isProtectedRoute || isAdminRoute) && !token) {
+        return NextResponse.redirect(new URL("/login", request.url));
+    }
 
-  return NextResponse.next();
+    // Validação específica para rotas de ADMIN
+    if (isAdminRoute && token) {
+        try {
+            // Decode JWT no formato header.payload.signature
+            const payloadBase64 = token.split(".")[1];
+            const decodedJson = Buffer.from(payloadBase64, "base64").toString("utf-8");
+            const payload = JSON.parse(decodedJson);
+
+            if (payload.role !== "ADMIN") {
+                return NextResponse.redirect(new URL("/dashboard", request.url));
+            }
+        } catch (e) {
+            // Token inválido/malformado
+            request.cookies.delete("token");
+            return NextResponse.redirect(new URL("/login", request.url));
+        }
+    }
+
+    return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+    matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
