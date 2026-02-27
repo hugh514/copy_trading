@@ -1,38 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Activity, ArrowRight, Lock } from "lucide-react";
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Activity } from "lucide-react";
+import { LoginForm } from "@/components/features/auth/LoginForm";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      // Set a mock session cookie (expires in 1 day)
-      document.cookie = "copytrade_session=true; path=/; max-age=86400";
-      router.push("/");
-      router.refresh();
-    }, 1000);
-  };
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -56,70 +27,7 @@ export default function LoginPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-xl">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold tracking-tight">
-              Login
-            </CardTitle>
-            <CardDescription className="text-neutral-500">
-              Insira seu e-mail e senha para acessar a conta
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleLogin}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-neutral-700">
-                  E-mail
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@exemplo.com"
-                  className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-neutral-700">
-                    Senha
-                  </Label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Esqueceu a senha?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-11 text-base font-medium shadow-md transition-transform active:scale-[0.98] mt-8"
-              >
-                {isLoading ? "Entrando..." : "Entrar na conta"}
-                {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
-              </Button>
-              <div className="text-center text-sm text-neutral-500">
-                Não tem uma conta?{" "}
-                <Link
-                  href="/register"
-                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
-                >
-                  Criar conta
-                </Link>
-              </div>
-            </CardFooter>
-          </form>
-        </Card>
+        <LoginForm />
       </div>
     </div>
   );
