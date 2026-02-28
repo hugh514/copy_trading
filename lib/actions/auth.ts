@@ -10,7 +10,7 @@ export async function loginAction(data: LoginInput) {
     }
 
     try {
-        const apiUrl = process.env.API_URL || "http://localhost:3000";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
         const res = await fetch(`${apiUrl}/api/auth/login`, {
             method: "POST",

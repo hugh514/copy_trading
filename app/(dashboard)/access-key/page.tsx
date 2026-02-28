@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -5,9 +8,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Key, Copy, RefreshCw } from "lucide-react";
+import { Key, Copy, RefreshCw, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/src/contexts/auth-context";
+import { useRotateKey } from "@/src/hooks/useRotateKey";
 
 export default function AccessKeyPage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [currentKey, setCurrentKey] = useState<string>("");
+  const rotateKeyMutation = useRotateKey();
+
+  const handleRotate = async () => {
+    try {
+      const response = await rotateKeyMutation.mutateAsync();
+      setCurrentKey(response.key);
+      toast({
+        title: "Nova chave gerada!",
+        description: "Sua nova chave de acesso está pronta para uso.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao gerar chave",
+        description:
+          error.response?.data?.message || "Ocorreu um erro inesperado.",
+      });
+    }
+  };
+
+  const isRotating = rotateKeyMutation.isPending;
+
+  const handleCopy = () => {
+    if (!currentKey) return;
+    navigator.clipboard.writeText(currentKey);
+    toast({
+      title: "Copiado!",
+      description: "Chave de acesso copiada para a área de transferência.",
+    });
+  };
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
@@ -41,11 +80,17 @@ export default function AccessKeyPage() {
                 <input
                   type="text"
                   readOnly
-                  value="CT-9F8A-B47C-E21D-8800"
+                  // TODO: Backend needs to expose current key
+                  value={currentKey || "••••••••••••••••••••"}
+                  placeholder="Clique em gerar para visualizar"
                   className="w-full pl-10 pr-3 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-800 font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
-              <button className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-sm">
+              <button
+                onClick={handleCopy}
+                disabled={!currentKey}
+                className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-sm disabled:opacity-50"
+              >
                 <Copy className="h-4 w-4" />
                 Copiar
               </button>
@@ -61,9 +106,17 @@ export default function AccessKeyPage() {
                 Isso invalidará a chave atual imediatamente.
               </p>
             </div>
-            <button className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-md transition-colors font-medium text-sm">
-              <RefreshCw className="h-4 w-4" />
-              Gerar Nova Chave
+            <button
+              onClick={handleRotate}
+              disabled={isRotating}
+              className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-md transition-colors font-medium text-sm disabled:opacity-50"
+            >
+              {isRotating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {isRotating ? "Gerando..." : "Gerar Nova Chave"}
             </button>
           </div>
         </CardContent>

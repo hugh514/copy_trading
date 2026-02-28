@@ -1,61 +1,28 @@
+"use client";
+
 import { cn } from "@/lib/utils";
-
-interface Trade {
-  id: string;
-  asset: string;
-  type: "BUY" | "SELL";
-  volume: number;
-  openPrice: number;
-  currentProfit: number;
-}
-
-const mockTrades: Trade[] = [
-  {
-    id: "1",
-    asset: "EURUSD",
-    type: "BUY",
-    volume: 1.5,
-    openPrice: 1.0854,
-    currentProfit: 125.5,
-  },
-  {
-    id: "2",
-    asset: "GBPUSD",
-    type: "SELL",
-    volume: 0.5,
-    openPrice: 1.2642,
-    currentProfit: -45.2,
-  },
-  {
-    id: "3",
-    asset: "USDJPY",
-    type: "BUY",
-    volume: 2.0,
-    openPrice: 150.32,
-    currentProfit: 340.0,
-  },
-  {
-    id: "4",
-    asset: "XAUUSD",
-    type: "SELL",
-    volume: 0.1,
-    openPrice: 2024.5,
-    currentProfit: 85.0,
-  },
-];
+import { Loader2 } from "lucide-react";
+import { useDashboardPositions } from "@/src/hooks/useDashboard";
 
 export function OpenTradesTable() {
+  const { data: trades = [], isLoading } = useDashboardPositions();
+
   return (
     <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-neutral-200 overflow-hidden">
-      <div className="p-6 border-b border-neutral-100">
-        <h3 className="text-lg font-semibold text-neutral-900 leading-none tracking-tight">
-          Operações Abertas
-        </h3>
-        <p className="text-sm text-neutral-500 mt-1.5">
-          Lista de posições em andamento na sua conta de copy trading.
-        </p>
+      <div className="p-6 border-b border-neutral-100 flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-neutral-900 leading-none tracking-tight">
+            Operações Abertas
+          </h3>
+          <p className="text-sm text-neutral-500 mt-1.5">
+            Lista de posições em andamento na sua conta de copy trading.
+          </p>
+        </div>
+        {isLoading && (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        )}
       </div>
-      <div className="w-full overflow-auto">
+      <div className="w-full overflow-auto min-h-[200px]">
         <table className="w-full caption-bottom text-sm">
           <thead>
             <tr className="border-b border-neutral-100 bg-neutral-50/50">
@@ -77,7 +44,7 @@ export function OpenTradesTable() {
             </tr>
           </thead>
           <tbody className="[&_tr:last-child]:border-0">
-            {mockTrades.map((trade) => (
+            {trades.map((trade) => (
               <tr
                 key={trade.id}
                 className="border-b border-neutral-100 transition-colors hover:bg-neutral-50/80"
@@ -116,7 +83,7 @@ export function OpenTradesTable() {
                 </td>
               </tr>
             ))}
-            {mockTrades.length === 0 && (
+            {!isLoading && trades.length === 0 && (
               <tr>
                 <td
                   colSpan={5}

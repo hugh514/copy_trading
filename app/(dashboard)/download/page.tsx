@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -5,9 +8,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useDownloadUrl } from "@/src/hooks/useDownloadUrl";
 
 export default function DownloadPage() {
+  const { toast } = useToast();
+  const downloadUrlMutation = useDownloadUrl();
+
+  const handleDownload = async () => {
+    try {
+      const response = await downloadUrlMutation.mutateAsync();
+      const downloadUrl = response.url;
+
+      if (downloadUrl) {
+        window.open(downloadUrl, "_blank");
+      } else {
+        throw new Error("URL de download não encontrada.");
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro no download",
+        description:
+          error.response?.data?.message ||
+          "Não foi possível obter a URL de download.",
+      });
+    }
+  };
+
+  const isDownloading = downloadUrlMutation.isPending;
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
@@ -38,9 +68,17 @@ export default function DownloadPage() {
                 MetaTrader 5. Não se esqueça de permitir WebRequest nas opções.
               </p>
             </div>
-            <button className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-sm w-full md:w-auto justify-center">
-              <Download className="h-5 w-5" />
-              Fazer Download
+            <button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-sm w-full md:w-auto justify-center disabled:opacity-50"
+            >
+              {isDownloading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Download className="h-5 w-5" />
+              )}
+              {isDownloading ? "Processando..." : "Fazer Download"}
             </button>
           </div>
         </CardContent>

@@ -17,21 +17,73 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import api from "@/src/services/api";
+import { useAuth } from "@/src/contexts/auth-context";
+import { useToast } from "@/components/ui/use-toast";
+
 export default function RegisterPage() {
   const router = useRouter();
+  const { login } = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Set a mock session cookie (expires in 1 day)
-      document.cookie = "copytrade_session=true; path=/; max-age=86400";
-      router.push("/");
-      router.refresh();
-    }, 1000);
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirm-password") as string;
+
+    if (password !== confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Erro no registro",
+        description: "As senhas não coincidem.",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.post("/api/auth/register", {
+        name,
+        email,
+        password,
+        confirmPassword,
+      });
+
+      const registrationData = response.data?.data;
+      const token = registrationData?.access_token || response.data?.token;
+
+      if (token) {
+        await login(token);
+        toast({
+          title: "Conta criada!",
+          description: "Seja bem-vindo à plataforma.",
+        });
+        router.push("/");
+      } else {
+        toast({
+          title: "Conta criada!",
+          description: "Por favor, faça login para continuar.",
+        });
+        router.push("/login");
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Erro ao criar conta. Tente novamente.";
+      toast({
+        variant: "destructive",
+        title: "Erro no registro",
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -98,6 +150,7 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type="password"
+                  placeholder="••••••••••••••••"
                   required
                   className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
                 />
@@ -109,12 +162,13 @@ export default function RegisterPage() {
                 <Input
                   id="confirm-password"
                   type="password"
+                  placeholder="••••••••••••••••"
                   required
                   className="bg-white border-neutral-200 focus:border-primary focus:ring-primary shadow-sm h-11 transition-all"
                 />
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
+            <CardFooter className="flex flex-col space-y-4 pt-6">
               <Button
                 type="submit"
                 disabled={isLoading}

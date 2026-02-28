@@ -3,30 +3,50 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Save } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { useAuth } from "@/src/contexts/auth-context";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  useRiskSettings,
+  useUpdateRiskSettings,
+} from "@/src/hooks/useRiskSettings";
 
-// Definição do Schema de Validação com Zod
 const riskFormSchema = z.object({
-  lotMultiplier: z
+  multiplier: z
     .number({ message: "Deve ser um número válido." })
     .min(0.01, { message: "O multiplicador mínimo é 0.01x." })
-    .max(10, { message: "O multiplicador máximo é 10.00x." }),
-  globalStopLoss: z
+    .max(100, { message: "O multiplicador máximo é 100.00x." }),
+  dailyLossLimit: z
     .number({ message: "Deve ser um número válido." })
-    .min(10, { message: "O limite de perda mínimo é $10." })
-    .max(100000, { message: "O limite de perda máximo é $100.000." }),
+    .min(0, { message: "O limite de perda mínimo é 0." }),
 });
 
 type RiskFormValues = z.infer<typeof riskFormSchema>;
 
 export function RiskForm() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { data: remoteSettings, isLoading: isFetching } = useRiskSettings();
+  const updateSettings = useUpdateRiskSettings();
+
   const form = useForm<RiskFormValues>({
     resolver: zodResolver(riskFormSchema),
     defaultValues: {
-      lotMultiplier: 1.0,
-      globalStopLoss: 150.0,
+      multiplier: 1.0,
+      dailyLossLimit: 150.0,
     },
   });
+
+  useEffect(() => {
+    const settings = remoteSettings || user?.riskSettings;
+    if (settings) {
+      form.reset({
+        multiplier: settings.multiplier,
+        dailyLossLimit: settings.dailyLossLimit,
+      });
+    }
+  }, [remoteSettings, user, form]);
 
   const {
     register,
@@ -34,11 +54,35 @@ export function RiskForm() {
     formState: { errors },
   } = form;
 
-  function onSubmit(data: RiskFormValues) {
-    // Aqui seria a chamada à API no projeto real
-    console.log("Configurações Salvas:", data);
-    alert(
-      `Risco salvo: Multiplicador ${data.lotMultiplier}x | Stop Loss $${data.globalStopLoss}`,
+  async function onSubmit(data: RiskFormValues) {
+    try {
+      await updateSettings.mutateAsync({
+        multiplier: data.multiplier,
+        dailyLossLimit: data.dailyLossLimit,
+        isActive: user?.riskSettings?.isActive ?? true,
+      });
+
+      toast({
+        title: "Sucesso!",
+        description: "Configurações de risco atualizadas.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar",
+        description:
+          error.response?.data?.message || "Falha na comunicação com o API.",
+      });
+    }
+  }
+
+  const isSaving = updateSettings.isPending;
+
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -64,11 +108,11 @@ export function RiskForm() {
               step="0.01"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Ex: 1.0"
-              {...register("lotMultiplier", { valueAsNumber: true })}
+              {...register("multiplier", { valueAsNumber: true })}
             />
-            {errors.lotMultiplier && (
+            {errors.multiplier && (
               <p className="text-sm font-medium text-destructive">
-                {errors.lotMultiplier.message}
+                {errors.multiplier.message}
               </p>
             )}
             <p className="text-sm text-muted-foreground">
@@ -86,11 +130,11 @@ export function RiskForm() {
               step="0.1"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Ex: 150.0"
-              {...register("globalStopLoss", { valueAsNumber: true })}
+              {...register("dailyLossLimit", { valueAsNumber: true })}
             />
-            {errors.globalStopLoss && (
+            {errors.dailyLossLimit && (
               <p className="text-sm font-medium text-destructive">
-                {errors.globalStopLoss.message}
+                {errors.dailyLossLimit.message}
               </p>
             )}
             <p className="text-sm text-muted-foreground">
@@ -101,10 +145,15 @@ export function RiskForm() {
 
           <button
             type="submit"
+            disabled={isSaving}
             className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 px-4 py-2 w-full md:w-auto"
           >
-            <Save className="h-4 w-4" />
-            Salvar Configurações
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {isSaving ? "Salvando..." : "Salvar Configurações"}
           </button>
         </form>
       </div>
